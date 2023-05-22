@@ -3,6 +3,25 @@ const express = require('express');
 const app = express();
 require('dotenv').config();
 
+// to erase files
+const fs = require('fs');
+
+// erasing screenshots loop
+let filePath = 'screenshot';
+for(let file=1956; file<2025; file++){
+  filePath += file+'.png';
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      // console.error(`Failed to delete the file: ${err}`);
+      return;
+    }
+    // console.log('File deleted successfully');
+  });
+
+  filePath = 'screenshot';
+}
+
 app.use(express.static('build'));
 
 let results = [];
@@ -16,7 +35,7 @@ function Results(year, countries) {
   this.countries = countries
 }
 
-let time = 2;
+let time = 3;
 
 async function scrapeESC(url){
 
@@ -27,18 +46,23 @@ async function scrapeESC(url){
     // `headless: false` enables “headful” mode.
   });
 
-    let year = 2017;
+    let year = 2019;
     let totalCountries = [];
+    let counter = 0;
 
     while(year<2024){
 
       const page = await browser.newPage();
+      
+      const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+      if(counter>3){
+        await delay(time*1000);
+      }
 
       await page.goto(url+`/${year}`,{waitUntil: 'domcontentloaded'});
 
       await page.screenshot({path: `screenshot${year}.png`});
-
-      const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
       const allCountries = await page.evaluate(() => {
 
@@ -62,7 +86,7 @@ async function scrapeESC(url){
 
       await page.close();
 
-      await delay(time*1000);
+      counter++;
       year++;
     }
 
