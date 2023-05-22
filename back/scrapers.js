@@ -60,23 +60,34 @@ async function scrapeESC(url){
         await delay(time*1000);
       }
 
-      await page.goto(url+`/${year}`,{waitUntil: 'domcontentloaded'});
+        await page.goto(url+`/${year}`,{waitUntil: 'domcontentloaded'});
 
-      await page.screenshot({path: `screenshot${year}.png`});
+        await page.screenshot({path: `screenshot${year}.png`});
 
-      const allCountries = await page.evaluate(() => {
+        const allCountries = await page.evaluate(() => {
 
-        const countries = document.querySelectorAll('.v_table_main>tbody tr');
+        const countries = document.querySelectorAll('.v_table_main>tbody tr')
 
         return Array.from(countries).map((country) => {
 
-          const name = country.querySelector('td:nth-child(2) a').innerText;
+        const name = country.querySelector('td:nth-child(2) a').innerText;
+        const pointsTotal = country.querySelector('td:nth-child(4) a').innerText;
+        const juryPoints = country.querySelector('td:nth-child(5)').innerText;
+        const teleVotes =  country.querySelector('td:nth-child(6)').innerText;
+       
 
-          return name;
+        return {
+          "name": name,
+          "totalPoints": pointsTotal,
+          "juryPoints":juryPoints,
+          "teleVotes" : teleVotes
+        }
 
         });
+        
 
       });
+
 
       const results = new Results(year, allCountries);
 
