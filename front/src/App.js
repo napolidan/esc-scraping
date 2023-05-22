@@ -31,9 +31,13 @@ const App = () => {
 
           <ol>
 
-            {competition.countries.map((item, index) => (
+            {competition.countries.map((item,index) => (
 
-              <li key={index}>{item}</li>
+              <li key={index}>
+
+                {item.name} - {item.totalPoints}pts
+
+              </li>
 
             ))}
 
