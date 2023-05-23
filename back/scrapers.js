@@ -26,13 +26,23 @@ app.use(express.static('build'));
 
 let results = [];
 
+app.get('/api/escResults/:year', (request, response) => {
+  const resultsArray = JSON.parse(results);
+  console.log(request.params.year)
+  const year = resultsArray.filter((competition) => competition.year==request.params.year)
+   response.send(year)
+})
+
 app.use('/api/escResults', async (req, res)=> {
   res.send(results);
 })
 
-function Results(year, countries) {
+
+
+function Results(year, qualifiedCountries, nonQualifiedCountries) {
   this.year = year;
-  this.countries = countries
+  this.qualifiedCountries = qualifiedCountries;
+  this.nonQualifiedCountries=nonQualifiedCountries
 }
 
 let time = 3;
@@ -64,18 +74,17 @@ async function scrapeESC(url){
 
         await page.screenshot({path: `screenshot${year}.png`});
 
-        const allCountries = await page.evaluate(() => {
+        const qualifiedCountries = await page.evaluate(() => {
 
-        const countries = document.querySelectorAll('.v_table_main>tbody tr')
+        const countriesFinal = document.querySelectorAll('.v_table_main>tbody tr')
 
-        return Array.from(countries).map((country) => {
+        return Array.from(countriesFinal).map((country) => {
 
         const name = country.querySelector('td:nth-child(2) a').innerText;
         const pointsTotal = country.querySelector('td:nth-child(4) a').innerText;
         const juryPoints = country.querySelector('td:nth-child(5)').innerText;
         const teleVotes =  country.querySelector('td:nth-child(6)').innerText;
-       
-
+  
         return {
           "name": name,
           "totalPoints": pointsTotal,
@@ -88,8 +97,28 @@ async function scrapeESC(url){
 
       });
 
+      const nonQualifiedCountries = await page.evaluate(() => {
 
-      const results = new Results(year, allCountries);
+        const droppedCountries = document.querySelectorAll('.v_table_out>tbody tr')
+
+        return Array.from(droppedCountries).map((country) => {
+
+        const name = country.querySelector('td:nth-child(2) a').innerText;
+        const pointsTotal = country.querySelector('td:nth-child(4)').innerText;
+       
+  
+        return {
+          "name": name,
+          "totalPoints": pointsTotal,
+        }
+
+        });
+        
+
+      });
+
+
+      const results = new Results(year, qualifiedCountries, nonQualifiedCountries);
 
       totalCountries.push(results);
 
@@ -105,7 +134,7 @@ async function scrapeESC(url){
 
     results = totalCountriesJSON
 
-    console.log(totalCountriesJSON);
+   // console.log(totalCountriesJSON);
     await browser.close();
 
     return totalCountriesJSON;
