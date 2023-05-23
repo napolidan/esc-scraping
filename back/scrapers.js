@@ -56,11 +56,11 @@ async function scrapeESC(url){
     // `headless: false` enables “headful” mode.
   });
 
-    let year = 2019;
+    let year = 2016;
     let totalCountries = [];
     let counter = 0;
 
-    while(year<2024){
+    while(year<=2018){
 
       const page = await browser.newPage();
       
@@ -72,7 +72,7 @@ async function scrapeESC(url){
 
         await page.goto(url+`/${year}`,{waitUntil: 'domcontentloaded'});
 
-        await page.screenshot({path: `screenshot${year}.png`});
+        // await page.screenshot({path: `screenshot${year}.png`});
 
         const qualifiedCountries = await page.evaluate(() => {
 
@@ -81,10 +81,11 @@ async function scrapeESC(url){
         return Array.from(countriesFinal).map((country) => {
 
         const name = country.querySelector('td:nth-child(2) a').innerText;
-        const pointsTotal = country.querySelector('td:nth-child(4) a').innerText;
-        const juryPoints = country.querySelector('td:nth-child(5)').innerText;
-        const teleVotes =  country.querySelector('td:nth-child(6)').innerText;
-  
+        const pointsTotal = parseInt(country.querySelector('td:nth-child(4) a').innerText);
+        const juryPoints = parseInt(country.querySelector('td:nth-child(5)').innerText);
+        const teleVotes =  parseInt(country.querySelector('td:nth-child(6)').innerText);
+       
+
         return {
           "name": name,
           "totalPoints": pointsTotal,
