@@ -1,44 +1,35 @@
 import React, { useState, useEffect, PureComponent } from 'react';
 import escService from './services/results';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const App = () => {
 
   const [results, setResults] = useState([]);
+  const [orderByTeleVotes, setOrderByTelevotes] = useState([]);
 
+  // useEffect(() => {
+
+  //   escService.getAll().then(results => setResults(results))
+
+  // }, [])
+
+  
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await escService.getAll().then(results);
+        // const jsonData = await response.json();
+        await setResults(response);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
 
-    escService.getAll().then(results => setResults(results))
-
-  }, [])
-
-  const data = [
-    {
-      name: 'Country1',
-      totalPoints: 150
-    },
-    {
-      name: 'Country2',
-      totalPoints: 98
-    },
-    {
-      name: 'Country3',
-      totalPoints: 86
-    },
-    {
-      name: 'Country4',
-      totalPoints: 99
-    },
-    {
-      name: 'Country5',
-      totalPoints: 85
-    },
-    {
-      name: 'Country6',
-      totalPoints: 65
-    }
-  ];
+    fetchData();
+  }, []);
   
   
   return(
@@ -53,30 +44,55 @@ const App = () => {
 
       {results.map((competition, index) => (
         
-        <div key={index}>
+        <div key={index} className="m-4">
 
           <h2>{competition.year}</h2>
 
-          
+          <div className='d-flex align-items-center'>
 
-          <ResponsiveContainer width={'100%'} height={300}>
-            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={competition.countries}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="name" />
-              <PolarRadiusAxis />
-              <Radar name="Mike" dataKey="totalPoints" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-            </RadarChart>
-          </ResponsiveContainer>
+            <ol>
 
-          <ol>
+              {competition.qualifiedCountries.map((item, index) => (
 
-            {competition.countries.map((item, index) => (
+                <li key={index}>
 
-              <li key={index}>{item}</li>
+                  {item.name} - {item.totalPoints}pts
 
-            ))}
+                </li>
 
-          </ol>
+              ))}
+
+            </ol>
+
+            <div className='w-100 d-flex align-items-center'>
+
+              <ResponsiveContainer width={"40%"} aspect={1}>
+                <BarChart
+                  width={500}
+                  height={300}
+                  data={competition.qualifiedCountries}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  {console.log('testing')}
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="juryPoints" stackId="a" fill="#8884d8" />
+                  <Bar dataKey="teleVotes" stackId="a" fill="#82ca9d" />
+                </BarChart>
+                
+              </ResponsiveContainer>
+                            
+            </div>
+
+          </div>
 
         </div>
 
