@@ -26,11 +26,28 @@ app.use(express.static('build'));
 
 let results = [];
 
+app.get('/api/escResults/:year/:country', (request, response) => {
+  const resultsArray = JSON.parse(results);
+  const year = resultsArray.filter((competition) => competition.year==request.params.year)
+   const qualified = year[0].qualifiedCountries
+  const nonQualified = year[0].nonQualifiedCountries
+  const allCountries = qualified.concat(nonQualified)
+  console.log(allCountries)
+  const country = allCountries.filter(x=>x.name.toLowerCase()==request.params.country.toLowerCase())
+  console.log(country)
+  if (country[0].hasOwnProperty("juryPoints")){
+    country[0].qualified=true
+  } else {
+    country[0].qualified=false
+  }
+  country[0].year=request.params.year
+   response.send(country)
+})
+
 app.get('/api/escResults/:year', (request, response) => {
   const resultsArray = JSON.parse(results);
-  console.log(request.params.year)
   const year = resultsArray.filter((competition) => competition.year==request.params.year)
-   response.send(year)
+  response.send(year)
 })
 
 app.use('/api/escResults', async (req, res)=> {
@@ -143,7 +160,7 @@ async function scrapeESC(url){
 
 scrapeESC('https://eurovisionworld.com/eurovision');
 
-console.log(results);
+
 
 const PORT = process.env.PORT 
 
