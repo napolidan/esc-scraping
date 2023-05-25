@@ -73,11 +73,13 @@ async function scrapeESC(url){
     // `headless: false` enables “headful” mode.
   });
 
-    let year = 2012;
+
+    let year = 2023;
     let totalCountries = [];
     let counter = 0;
 
-    while(year<=2023){
+    while(year>=2021){
+
 
       const page = await browser.newPage();
       
@@ -145,7 +147,7 @@ async function scrapeESC(url){
       await page.close();
 
       counter++;
-      year++;
+      year--;
     }
 
     const totalCountriesJSON = JSON.stringify(totalCountries);
