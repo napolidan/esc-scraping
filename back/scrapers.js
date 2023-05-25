@@ -73,11 +73,11 @@ async function scrapeESC(url){
     // `headless: false` enables “headful” mode.
   });
 
-    let year = 2016;
+    let year = 2012;
     let totalCountries = [];
     let counter = 0;
 
-    while(year<=2018){
+    while(year<=2023){
 
       const page = await browser.newPage();
       
@@ -99,8 +99,8 @@ async function scrapeESC(url){
 
         const name = country.querySelector('td:nth-child(2) a').innerText;
         const pointsTotal = parseInt(country.querySelector('td:nth-child(4) a').innerText);
-        const juryPoints = parseInt(country.querySelector('td:nth-child(5)').innerText);
-        const teleVotes =  parseInt(country.querySelector('td:nth-child(6)').innerText);
+        const juryPoints = country.querySelector('td:nth-child(6)')!==null ? parseInt(country.querySelector('td:nth-child(6)').innerText) : null;
+        const teleVotes =  country.querySelector('td:nth-child(6)')!==null ? parseInt(country.querySelector('td:nth-child(5)').innerText) : null;
        
 
         return {
