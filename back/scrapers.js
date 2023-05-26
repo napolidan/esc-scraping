@@ -223,7 +223,7 @@ async function scrapeESC(url) {
   await browser.close();
 
   return totalCountriesJSON;
-}
+
 
 scrapeESC("https://eurovisionworld.com/eurovision");
 
