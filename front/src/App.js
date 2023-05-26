@@ -11,6 +11,7 @@ const App = () => {
   const [results, setResults] = useState([]);
   const [orderByTeleVotes, setOrderByTelevotes] = useState([]);
   const [lessJury, setLessJury] = useState([]);
+  const [overall, setOverall] = useState([]);
 
   const data = [
     {
@@ -678,7 +679,7 @@ const App = () => {
     setResults(data);
   }
 
-  if(results.length !== 0 && orderByTeleVotes.length===0 && lessJury.length===0){
+  if(results.length !== 0 && orderByTeleVotes.length === 0){
     
     setResults(data);
     let sortedArray1 = data.map(function(obj) {
@@ -693,7 +694,7 @@ const App = () => {
     setOrderByTelevotes(sortedArray1);
   }
 
-  if(results.length !== 0 && lessJury.length === 0){
+  if(orderByTeleVotes.length !== 0 && lessJury.length === 0){
 
     setResults(data);
     let sortedArray2 = results.map(function(obj) {
@@ -729,41 +730,103 @@ const App = () => {
     });
     setLessJury(sortedArray2);
   }
+
+  if(lessJury.length !== 0 && overall.length === 0){
+    setResults(data);
+    // Reduce the jsonArray to create a new array with sorted JSON objects for qualified and non-qualified countries
+    let sortedArray3 = results.reduce(function(acc, obj) {
+      var qualifiedCountriesArray = obj.qualifiedCountries.map(function(country) {
+        return {
+          "name": country.name,
+          "controversy": country.teleVotes-country.juryPoints,
+          "totalPoints": country.totalPoints,
+          "juryPoints": country.juryPoints,
+          "teleVotes": country.teleVotes,
+          "year": obj.year
+        };
+      });
+    
+      var nonQualifiedCountriesArray = obj.nonQualifiedCountries.map(function(country) {
+        return {
+          "name": country.name,
+          "controversy": country.teleVotes-country.juryPoints,
+          "totalPoints": country.totalPoints,
+          "juryPoints": country.juryPoints,
+          "teleVotes": country.teleVotes,
+          "year": obj.year
+        };
+      });
+    
+      acc[0].countries = acc[0].countries.concat(qualifiedCountriesArray);
+      acc[1].countries = acc[1].countries.concat(nonQualifiedCountriesArray);
+    
+      return acc;
+    }, [
+      { "category": "Qualified Countries", "countries": [] },
+      { "category": "Non-Qualified Countries", "countries": [] }
+    ]);
+    
+    // Sort the inner JSON objects by points in descending order
+    sortedArray3.forEach(function(category) {
+      category.countries.sort(function(a, b) {
+        return b.totalPoints - a.totalPoints; // Sort in descending order
+      });
+    });
+
+    setOverall(sortedArray3);
+  }
   
   return(
 
     <div className='container'>
+
+    {console.log(overall)}
 
       {results.length === 0 ? (
         <h1>fetching data...</h1>
       ) : (
         <h1>eurovision results</h1>
       )}
-      
+
+      <article style={{width: '100%', minWidth: '100px'}}>
+        <h1>The top 10 </h1>
+        <ResponsiveContainer width={"100%"} aspect={2}>
+          <BarChart
+            width={1000}
+            height={1000}
+            data={overall
+              .find(obj => obj.category === 'Qualified Countries')
+              ?.countries.slice(0, 10)}
+            margin={{
+              top: 20,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="teleVotes" stackId="a" fill="#82ca9d" />
+            <Bar dataKey="juryPoints" stackId="a" fill="#8884d8" />
+          </BarChart>
+        </ResponsiveContainer>
+      </article>   
+
       {data.map((competition, index) => (
-        
-        <article key={index} className="m-4">
-
+        <article key={index}>
           <h2>{competition.year}</h2>
-
           <div className='grid'>
-
             <ol>
-
               {competition.qualifiedCountries.map((item, index) => (
-
                 <li className='li-font-size' key={index}>
-
                   {item.name} - {item.totalPoints}pts
-
                 </li>
-
               ))}
-
             </ol>
-
             <div>
-
             <div style={{width: '100%', minWidth: '350px', maxWidth: '650px' }}>
               <ResponsiveContainer width={"100%"} aspect={1}>
                 <BarChart
@@ -785,15 +848,10 @@ const App = () => {
                   <Bar dataKey="teleVotes" stackId="a" fill="#82ca9d" />
                   <Bar dataKey="juryPoints" stackId="a" fill="#8884d8" />
                 </BarChart>
-                
               </ResponsiveContainer>
-            
             </div>
-                            
             </div>
-
           </div>
-
         </article>
 
       ))}
