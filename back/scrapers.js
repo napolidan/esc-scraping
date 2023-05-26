@@ -117,7 +117,7 @@ async function scrapeESC(url) {
         );
         const information = await countryRequest.json();
         console.log(information);
-        const flag = information[0].flags.png;
+        const flag = information[0].flags.svg;
 
         return {
           name: name,
