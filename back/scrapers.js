@@ -76,91 +76,29 @@ async function scrapeESC(url) {
     // `headless: false` enables “headful” mode.
   });
 
+  let year = 2023;
+  let totalCountries = [];
+  let counter = 0;
 
-    let year = 2023;
-    let totalCountries = [];
-    let counter = 0;
-
-    while(year>=2021){
-
-
+  while (year >= 2021) {
+    const page = await browser.newPage();
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-      if(counter>3){
-        await delay(time*1000);
-      }
-
-        await page.goto(url+`/${year}`,{waitUntil: 'domcontentloaded'});
-
-        // await page.screenshot({path: `screenshot${year}.png`});
-
-        const qualifiedCountries = await page.evaluate(() => {
-
-        const countriesFinal = document.querySelectorAll('.v_table_main>tbody tr')
-
-        return Array.from(countriesFinal).map((country) => {
-
-        const name = country.querySelector('td:nth-child(2) a').innerText;
-        const pointsTotal = parseInt(country.querySelector('td:nth-child(4) a').innerText);
-        const juryPoints = country.querySelector('td:nth-child(6)')!==null ? parseInt(country.querySelector('td:nth-child(6)').innerText) : null;
-        const teleVotes =  country.querySelector('td:nth-child(6)')!==null ? parseInt(country.querySelector('td:nth-child(5)').innerText) : null;
-       
-
-        return {
-          "name": name,
-          "totalPoints": pointsTotal,
-          "juryPoints":juryPoints,
-          "teleVotes" : teleVotes
-        }
-
-        });
-        
-
-      });
-
-      const nonQualifiedCountries = await page.evaluate(() => {
-
-        const droppedCountries = document.querySelectorAll('.v_table_out>tbody tr')
-
-        return Array.from(droppedCountries).map((country) => {
-
-        const name = country.querySelector('td:nth-child(2) a').innerText;
-        const pointsTotal = country.querySelector('td:nth-child(4)').innerText;
-       
-  
-        return {
-          "name": name,
-          "totalPoints": pointsTotal,
-        }
-
-        });
-        
-
-      });
-
-
-      const results = new Results(year, qualifiedCountries, nonQualifiedCountries);
-
-      totalCountries.push(results);
-
-      console.log(year)
-
-      await page.close();
-
-      counter++;
-      year--;
+    if (counter > 3) {
+      await delay(time * 1000);
     }
 
     await page.goto(url + `/${year}`, { waitUntil: "domcontentloaded" });
 
     // await page.screenshot({path: `screenshot${year}.png`});
 
-    const qualifiedCountries = await page.evaluate(() => {
+    const qualifiedCountries = await page.evaluate(async () => {
       const countriesFinal = document.querySelectorAll(
         ".v_table_main>tbody tr"
       );
 
-      return Array.from(countriesFinal).map((country) => {
+      const promises = Array.from(countriesFinal).map(async (country) => {
+        console.log(country);
         const name = country.querySelector("td:nth-child(2) a").innerText;
         const pointsTotal = parseInt(
           country.querySelector("td:nth-child(4) a").innerText
@@ -174,13 +112,23 @@ async function scrapeESC(url) {
             ? parseInt(country.querySelector("td:nth-child(5)").innerText)
             : null;
 
+        const countryRequest = await fetch(
+          `https://restcountries.com/v3.1/name/${name}`
+        );
+        const information = await countryRequest.json();
+        console.log(information);
+        const flag = information[0].flags.png;
+
         return {
           name: name,
+          flag: flag,
           totalPoints: pointsTotal,
           juryPoints: juryPoints,
           teleVotes: teleVotes,
         };
       });
+
+      return Promise.all(promises);
     });
 
     const nonQualifiedCountries = await page.evaluate(() => {
@@ -188,15 +136,24 @@ async function scrapeESC(url) {
         ".v_table_out>tbody tr"
       );
 
-      return Array.from(droppedCountries).map((country) => {
+      const promises2 = Array.from(droppedCountries).map(async (country) => {
+        console.log(country);
         const name = country.querySelector("td:nth-child(2) a").innerText;
         const pointsTotal = country.querySelector("td:nth-child(4)").innerText;
+        const countryRequest = await fetch(
+          `https://restcountries.com/v3.1/name/${name}`
+        );
+        const information = await countryRequest.json();
+        console.log(information);
+        const flag = information[0].flags.svg;
 
         return {
           name: name,
+          flag: flag,
           totalPoints: pointsTotal,
         };
       });
+      return Promise.all(promises2);
     });
 
     const results = new Results(
@@ -212,8 +169,10 @@ async function scrapeESC(url) {
     await page.close();
 
     counter++;
-    year++;
+    year--;
   }
+
+  // await page.screenshot({path: `screenshot${year}.png`});
 
   const totalCountriesJSON = JSON.stringify(totalCountries);
 
@@ -223,7 +182,7 @@ async function scrapeESC(url) {
   await browser.close();
 
   return totalCountriesJSON;
-
+}
 
 scrapeESC("https://eurovisionworld.com/eurovision");
 
