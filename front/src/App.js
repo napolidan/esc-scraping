@@ -23,12 +23,14 @@ const App = () => {
     {
       datasets: [
         {
-        label: 'A dataset',
-        data: [],
-        backgroundColor: 'rgba(255, 99, 132, 1)',
+          label: 'A dataset',
+          data: [],
+          backgroundColor: 'rgba(255, 99, 132, 1)',
         },
       ]
     });
+
+  const [googleData, setGoogleData] = useState([["Jury Points", "Tele"]]);
 
   // AXIOS OBTENIENDO DATA
   useEffect(() => {
@@ -40,21 +42,19 @@ const App = () => {
   // OBTENER EL DATASET PARA EL GRÁFICO
   useEffect(() => {
 
-
-    const mapeo = () => data.flatMap((competition) => 
-        (
-          competition.qualifiedCountries.map(({name, totalPoints, juryPoints, teleVotes}) =>(
-            {
-              x: juryPoints,
-              y: teleVotes,
-              country: name,
-              totalPoints: totalPoints
-            }
-          )
-        )
+    const mapeo = () => data.flatMap((competition) =>
+    (
+      competition.qualifiedCountries.map(({ name, totalPoints, juryPoints, teleVotes }) => (
+        {
+          x: juryPoints,
+          y: teleVotes,
+          country: name,
+          totalPoints: totalPoints
+        }
+      )
       )
     )
-    
+    )
 
     setDataSet(prevdataSet => ({
       ...prevdataSet,
@@ -64,7 +64,23 @@ const App = () => {
       }))
     }))
 
+    const generateGoogleData = () => data.flatMap((competition) => 
+
+      competition.qualifiedCountries.map(({totalPoints, juryPoints, teleVotes}) => (
+
+        [juryPoints, teleVotes]
+
+      ))
+    
+    )
+
+    setGoogleData((prevdataSet) => ([
+      ...prevdataSet,
+      ...generateGoogleData()
+    ]))
+
   }, [data.length !== 0]);
+
 
   const options = {
     responsive: true,
@@ -94,7 +110,6 @@ const App = () => {
     },
   };
 
-  
 
   return (
     <div className="container">
@@ -104,6 +119,9 @@ const App = () => {
 
       {console.log("dataSet")}
       {console.log(dataSet)}
+
+      {console.log("google dataSet")}
+      {console.log(googleData)}
 
 
       {data.length === 0 ? (
@@ -126,8 +144,16 @@ const App = () => {
 
           </div>
           <div>
-              <Scatter options={options} data={dataSet} />
-            </div>
+            <Scatter options={options} data={dataSet} />
+
+            <Chart
+              chartType="Scatter"
+              width="100%"
+              height="800px"
+              data={googleData}
+              options={options}
+            />
+          </div>
         </article>
       ))}
     </div>
