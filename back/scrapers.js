@@ -2,6 +2,9 @@ const puppeteer = require("puppeteer");
 const express = require("express");
 const app = express();
 require("dotenv").config();
+const cors = require("cors");
+
+app.use(cors());
 
 // to erase files
 const fs = require("fs");
@@ -71,9 +74,6 @@ let time = 3;
 async function scrapeESC(url) {
   const browser = await puppeteer.launch({
     headless: "new",
-    // `headless: true` (default) enables old Headless;
-    // `headless: 'new'` enables new Headless;
-    // `headless: false` enables “headful” mode.
   });
 
   let year = 2023;
@@ -98,7 +98,6 @@ async function scrapeESC(url) {
       );
 
       const promises = Array.from(countriesFinal).map(async (country) => {
-        console.log(country);
         const name = country.querySelector("td:nth-child(2) a").innerText;
         const pointsTotal = parseInt(
           country.querySelector("td:nth-child(4) a").innerText
@@ -116,9 +115,7 @@ async function scrapeESC(url) {
           `https://restcountries.com/v3.1/name/${name}`
         );
         const information = await countryRequest.json();
-        console.log(information);
         const flag = information[0].flags.svg;
-
         return {
           name: name,
           flag: flag,
@@ -137,14 +134,12 @@ async function scrapeESC(url) {
       );
 
       const promises2 = Array.from(droppedCountries).map(async (country) => {
-        console.log(country);
         const name = country.querySelector("td:nth-child(2) a").innerText;
         const pointsTotal = country.querySelector("td:nth-child(4)").innerText;
         const countryRequest = await fetch(
           `https://restcountries.com/v3.1/name/${name}`
         );
         const information = await countryRequest.json();
-        console.log(information);
         const flag = information[0].flags.svg;
 
         return {
@@ -162,6 +157,58 @@ async function scrapeESC(url) {
       nonQualifiedCountries
     );
 
+    await page.evaluate(async () => {
+      console.log("hola");
+      const buttonSelector = '[data-button="tele"]';
+      const buttonElement = document.querySelector(buttonSelector);
+      console.log(buttonElement.innerText);
+
+      await buttonElement.click();
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const scores = await page.evaluate(() => {
+      const scores = document.querySelectorAll(".scoreboard_table>tbody tr");
+      const arrayScores = Array.from(scores);
+      let points = [];
+
+      for (let i = 0; i < arrayScores.length; i++) {
+        const teleVotes = {
+          name: "",
+          [parseInt(1)]: 0,
+          [parseInt(2)]: 0,
+          [parseInt(3)]: 0,
+          [parseInt(4)]: 0,
+          [parseInt(5)]: 0,
+          [parseInt(6)]: 0,
+          [parseInt(7)]: 0,
+          [parseInt(8)]: 0,
+          [parseInt(10)]: 0,
+          [parseInt(12)]: 0,
+        };
+
+        for (let j = 4; j < arrayScores[i].children.length; j++) {
+          const number = parseInt(
+            arrayScores[i].querySelector(`td:nth-child(${j + 1})`).innerText
+          );
+          console.log(number);
+          if (number != null && number != NaN) {
+            teleVotes[number] = teleVotes[number] + 1;
+          }
+        }
+        const countryName =
+          arrayScores[i].querySelector(`td:nth-child(3)`).innerText;
+        teleVotes.name = countryName;
+        delete teleVotes.NaN;
+        points.push(teleVotes);
+      }
+      return points;
+    });
+
+    console.log(scores);
+    results.teleVotesRecieved = scores;
+
     totalCountries.push(results);
 
     console.log(year);
@@ -177,7 +224,6 @@ async function scrapeESC(url) {
   const totalCountriesJSON = JSON.stringify(totalCountries);
 
   results = totalCountriesJSON;
-
   // console.log(totalCountriesJSON);
   await browser.close();
 
