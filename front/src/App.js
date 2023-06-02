@@ -72,7 +72,7 @@ const App = () => {
         [
           ["country name", "total points"],
           ...competition.qualifiedCountries.map((country) => 
-              [country.name, country.totalPoints.toString()]
+              [country.name, country.totalPoints]
           )
         ]
         result[competition.year] = innerArray;
@@ -120,21 +120,12 @@ const App = () => {
     },
   };
 
-  const optionsG = {
-    // Material design options
-    chart: {
-      title: "Countries' Jury points and Televotes",
-    },
-    series: {
-      0: { axis: "jury points" },
-      1: { axis: "televotes" },
-    },
-    axes: {
-      y: {
-        "jury points": { label: "Jury Points" },
-        "televotes": { label: "Televotes" },
-      },
-    },
+  var optionsG = {
+    region: '150', // Africa
+    colorAxis: {colors: ['#ffb1c2', '#ff6384']},
+          backgroundColor: '#141e26',
+          datalessRegionColor: '#2c353c',
+          defaultColor: '#f5f5f5',
   };
 
 
@@ -172,19 +163,33 @@ const App = () => {
           </div>
           {console.log("asdfs")}
           {console.log(googleData[competition.year])}
-          <Chart
-              chartType="GeoChart"
-              width="100%"
-              height="800px"
-              data={googleData[competition.year]}
-              // options={optionsG}
-            />
-          <div>
+          <div  style={{ width: '50%',display:"inline-block" }}>
+            <Chart
+            style={{display:"inline-block" }}
+            chartEvents={[
+              {
+                eventName: "select",
+                callback: ({ chartWrapper }) => {
+                  const chart = chartWrapper.getChart();
+                  const selection = chart.getSelection();
+                  if (selection.length === 0) return;
+                  const region = googleData[competition.year][selection[0].row + 1];
+                  console.log("Selected : " + region);
+                },
+              },
+            ]}
+                chartType="GeoChart"
+                width="100%"
+                data={googleData[competition.year]}
+                options={optionsG}
+              />
+          </div>
+          
+          <div style={{ width: '50%',display:"inline-block" }}>
             <Scatter
             // options={options}
             data={dataSet}
             />
-
           </div>
         </article>
       ))}
