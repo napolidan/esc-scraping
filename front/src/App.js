@@ -30,7 +30,7 @@ const App = () => {
       ]
     });
 
-  const [googleData, setGoogleData] = useState([["Jury Points", "Tele"]]);
+  const [googleData, setGoogleData] = useState({});
 
   // AXIOS OBTENIENDO DATA
   useEffect(() => {
@@ -39,7 +39,7 @@ const App = () => {
 
   }, [])
 
-  // OBTENER EL DATASET PARA EL GRÁFICO
+  // OBTENER EL DATASET PARA GRÁFICOS
   useEffect(() => {
 
     const mapeo = () => data.flatMap((competition) =>
@@ -64,20 +64,30 @@ const App = () => {
       }))
     }))
 
-    const generateGoogleData = () => data.flatMap((competition) => 
+    const result = {}
 
-      competition.qualifiedCountries.map(({totalPoints, juryPoints, teleVotes}) => (
-
-        [juryPoints, teleVotes]
-
-      ))
+    const generateGoogleData = () => data.map((competition) => 
+      {
+        const innerArray = 
+        [
+          ["country name", "total points"],
+          ...competition.qualifiedCountries.map((country) => 
+              [country.name, country.totalPoints.toString()]
+          )
+        ]
+        result[competition.year] = innerArray;
+      }
+    );
     
-    )
+    console.log("result")
+    console.log(result)
 
-    setGoogleData((prevdataSet) => ([
-      ...prevdataSet,
-      ...generateGoogleData()
-    ]))
+
+    const mapa = generateGoogleData();
+    console.log("mapa")
+    console.log(mapa)
+
+    setGoogleData(result)
 
   }, [data.length !== 0]);
 
@@ -106,6 +116,23 @@ const App = () => {
           const point = dataSet.data[tooltipItem.index];
           return point.label;
         },
+      },
+    },
+  };
+
+  const optionsG = {
+    // Material design options
+    chart: {
+      title: "Countries' Jury points and Televotes",
+    },
+    series: {
+      0: { axis: "jury points" },
+      1: { axis: "televotes" },
+    },
+    axes: {
+      y: {
+        "jury points": { label: "Jury Points" },
+        "televotes": { label: "Televotes" },
       },
     },
   };
@@ -143,16 +170,21 @@ const App = () => {
             </ol>
 
           </div>
-          <div>
-            <Scatter options={options} data={dataSet} />
-
-            <Chart
-              chartType="Scatter"
+          {console.log("asdfs")}
+          {console.log(googleData[competition.year])}
+          <Chart
+              chartType="GeoChart"
               width="100%"
               height="800px"
-              data={googleData}
-              options={options}
+              data={googleData[competition.year]}
+              // options={optionsG}
             />
+          <div>
+            <Scatter
+            // options={options}
+            data={dataSet}
+            />
+
           </div>
         </article>
       ))}
