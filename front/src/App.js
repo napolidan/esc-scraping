@@ -19,6 +19,12 @@ ChartJS.register(LinearScale, PointElement, LineElement, Tooltip, Legend);
 const App = () => {
   const [data, setData] = useState([]);
 
+  const [total, setTotal] = useState(0);
+  const [totalYears, setTotalYears] = useState(0);
+  const [totalJury, setTotalJury] = useState(0);
+  const [totalTele, setTotalTele] = useState(0);
+
+
   const [dataSet, setDataSet] = useState(
     {
       datasets: [
@@ -64,30 +70,45 @@ const App = () => {
       }))
     }))
 
-    const result = {}
+    const result = {};
 
-    const generateGoogleData = () => data.map((competition) => 
-      {
-        const innerArray = 
+    const generateGoogleData = () => data.map((competition) => {
+      const innerArray =
         [
           ["country name", "total points"],
-          ...competition.qualifiedCountries.map((country) => 
-              [country.name, country.totalPoints]
+          ...competition.qualifiedCountries.map((country) =>
+            [country.name, country.totalPoints]
           )
         ]
-        result[competition.year] = innerArray;
-      }
+      result[competition.year] = innerArray;
+    }
     );
-    
-    console.log("result")
-    console.log(result)
-
 
     const mapa = generateGoogleData();
-    console.log("mapa")
-    console.log(mapa)
 
-    setGoogleData(result)
+    setGoogleData(result);
+    let totalSum = 0;
+    let totalYears = 0;
+    let totalJury = 0;
+    let totalTele = 0;
+
+    const generateTotal = () => data.forEach((competition) => {
+      competition.qualifiedCountries.forEach((country) => {
+        totalSum += country.totalPoints
+        totalJury += country.juryPoints
+        totalTele += country.teleVotes
+      })
+      totalYears++;
+      }
+    );
+
+    generateTotal();
+    
+    setTotal(totalSum);
+    setTotalYears(totalYears);
+    setTotalJury(totalJury);
+    setTotalTele(totalTele);
+    
 
   }, [data.length !== 0]);
 
@@ -122,24 +143,24 @@ const App = () => {
 
   var optionsG = {
     region: '150', // Africa
-    colorAxis: {colors: ['#ffb1c2', '#ff6384']},
-          backgroundColor: '#141e26',
-          datalessRegionColor: '#2c353c',
-          defaultColor: '#f5f5f5',
+    colorAxis: { colors: ['#ffb1c2', '#ff6384'] },
+    backgroundColor: '#141e26',
+    datalessRegionColor: '#2c353c',
+    defaultColor: '#f5f5f5',
   };
 
 
   return (
     <div className="container">
 
-      {console.log("data")}
+      {/* {console.log("data")}
       {console.log(data)}
 
       {console.log("dataSet")}
       {console.log(dataSet)}
 
       {console.log("google dataSet")}
-      {console.log(googleData)}
+      {console.log(googleData)} */}
 
 
       {data.length === 0 ? (
@@ -147,6 +168,15 @@ const App = () => {
       ) : (
         <h1>eurovision results</h1>
       )}
+
+      <article>
+
+        <h3>A total of {total} points during {totalYears} years</h3>
+
+        <h4>{totalJury} jury points in total</h4>
+        <h4>{totalTele} televote points in total</h4>
+
+      </article>
 
       {data.map((competition, index) => (
         <article key={index}>
@@ -161,34 +191,33 @@ const App = () => {
             </ol>
 
           </div>
-          {console.log("asdfs")}
-          {console.log(googleData[competition.year])}
-          <div  style={{ width: '50%',display:"inline-block" }}>
+          {/* {console.log(googleData[competition.year])} */}
+          <div style={{ width: '50%', display: "inline-block" }}>
             <Chart
-            style={{display:"inline-block" }}
-            chartEvents={[
-              {
-                eventName: "select",
-                callback: ({ chartWrapper }) => {
-                  const chart = chartWrapper.getChart();
-                  const selection = chart.getSelection();
-                  if (selection.length === 0) return;
-                  const region = googleData[competition.year][selection[0].row + 1];
-                  console.log("Selected : " + region);
+              style={{ display: "inline-block" }}
+              chartEvents={[
+                {
+                  eventName: "select",
+                  callback: ({ chartWrapper }) => {
+                    const chart = chartWrapper.getChart();
+                    const selection = chart.getSelection();
+                    if (selection.length === 0) return;
+                    const region = googleData[competition.year][selection[0].row + 1];
+                    console.log("Selected : " + region);
+                  },
                 },
-              },
-            ]}
-                chartType="GeoChart"
-                width="100%"
-                data={googleData[competition.year]}
-                options={optionsG}
-              />
+              ]}
+              chartType="GeoChart"
+              width="100%"
+              data={googleData[competition.year]}
+              options={optionsG}
+            />
           </div>
-          
-          <div style={{ width: '50%',display:"inline-block" }}>
+
+          <div style={{ width: '50%', display: "inline-block" }}>
             <Scatter
-            // options={options}
-            data={dataSet}
+              // options={options}
+              data={dataSet}
             />
           </div>
         </article>
