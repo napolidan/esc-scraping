@@ -24,6 +24,7 @@ const App = () => {
   const [totalJury, setTotalJury] = useState(0);
   const [totalTele, setTotalTele] = useState(0);
 
+  const [averagePos, setAveragePos] = useState({});
 
   const [dataSet, setDataSet] = useState(
     {
@@ -84,8 +85,7 @@ const App = () => {
     }
     );
 
-    const mapa = generateGoogleData();
-
+    generateGoogleData();
     setGoogleData(result);
     let totalSum = 0;
     let totalYears = 0;
@@ -108,7 +108,49 @@ const App = () => {
     setTotalYears(totalYears);
     setTotalJury(totalJury);
     setTotalTele(totalTele);
-    
+
+    let countryPositions = {};
+    let countryOccurrences = {};
+    let averagePositions = {};
+
+    const calculateAverage = () => {
+
+      data.forEach((competition) => 
+
+        competition.qualifiedCountries.forEach((country, index) => {
+  
+          let countryName = country.name;
+          let countryPosition = index;
+  
+          if(countryName in countryPositions){
+            countryPositions[countryName] += countryPosition;
+            countryOccurrences[countryName]++;
+          }else{
+            countryPositions[countryName] = countryPosition;
+            countryOccurrences[countryName] = 1;
+          }
+  
+        })
+  
+      )
+
+      for (let countryName in countryPositions) {
+
+        let totalPosition = countryPositions[countryName];
+        let ocurrenceCount = countryOccurrences[countryName];
+        let average = totalPosition/ocurrenceCount;
+        average = parseFloat(average.toFixed(2));
+        averagePositions[countryName] = average;
+  
+      }
+      console.log(averagePositions)
+      setAveragePos(averagePositions);
+    }
+
+    calculateAverage();
+
+    console.log(averagePos)
+
 
   }, [data.length !== 0]);
 
@@ -175,6 +217,10 @@ const App = () => {
 
         <h4>{totalJury} jury points in total</h4>
         <h4>{totalTele} televote points in total</h4>
+
+      </article>
+
+      <article>
 
       </article>
 
