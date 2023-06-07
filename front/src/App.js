@@ -1,9 +1,9 @@
 import React, { useState, useEffect, PureComponent } from "react";
-import escService from "./services/results";
+import {getAll} from "./services/results";
 // import 'bootstrap/dist/css/bootstrap.min.css';
 // import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import "@picocss/pico";
-import Chart from 'react-google-charts'
+import Chart from "react-google-charts";
 import {
   Chart as ChartJS,
   LinearScale,
@@ -26,64 +26,80 @@ const App = () => {
 
   const [averagePos, setAveragePos] = useState({});
 
-  const [dataSet, setDataSet] = useState(
-    {
-      datasets: [
-        {
-          label: 'A dataset',
-          data: [],
-          backgroundColor: 'rgba(255, 99, 132, 1)',
-        },
-      ]
-    });
+  const [dataSet, setDataSet] = useState({
+    datasets: [
+      {
+        label: "A dataset",
+        data: [],
+        backgroundColor: "rgba(255, 99, 132, 1)",
+      },
+    ],
+  });
 
   const [googleData, setGoogleData] = useState({});
 
-  // AXIOS OBTENIENDO DATA
+
   useEffect(() => {
+    async function fetchDataWrapper() {
+      try {
+        const data = await getAll();
+        // Use the data
+        setData(data)
+      } catch (error) {
+        // Handle the error
+        console.log('Error:', error);
+      }
+    }
 
-    escService.getAll().then(results => setData(results))
+    fetchDataWrapper();
+  }, []);
 
-  }, [])
+  // AXIOS OBTENIENDO DATA
+  // useEffect(() => {
+  //   try {
+  //     escService.getAll().then((results) => setData(results));
+  //     // Use the data
+  //   } catch (error) {
+  //     // Handle the error
+  //     console.log("Error:", error);
+  //   }
+  // }, []);
 
   // OBTENER EL DATASET PARA GRÁFICOS
   useEffect(() => {
+    const mapeo = () =>
+      data.flatMap((competition) =>
+        competition.qualifiedCountries.map(
+          ({ name, totalPoints, juryPoints, teleVotes }) => ({
+            x: juryPoints,
+            y: teleVotes,
+            country: name,
+            totalPoints: totalPoints,
+          })
+        )
+      );
 
-    const mapeo = () => data.flatMap((competition) =>
-    (
-      competition.qualifiedCountries.map(({ name, totalPoints, juryPoints, teleVotes }) => (
-        {
-          x: juryPoints,
-          y: teleVotes,
-          country: name,
-          totalPoints: totalPoints
-        }
-      )
-      )
-    )
-    )
-
-    setDataSet(prevdataSet => ({
+    setDataSet((prevdataSet) => ({
       ...prevdataSet,
-      datasets: prevdataSet.datasets.map(ds => ({
+      datasets: prevdataSet.datasets.map((ds) => ({
         ...ds,
-        data: mapeo()
-      }))
-    }))
+        data: mapeo(),
+      })),
+    }));
 
     const result = {};
 
-    const generateGoogleData = () => data.map((competition) => {
-      const innerArray =
-        [
+    const generateGoogleData = () =>
+      data.map((competition) => {
+        const innerArray = [
           ["country name", "total points"],
-          ...competition.qualifiedCountries.map((country) =>
-            [country.name, country.totalPoints]
-          )
-        ]
-      result[competition.year] = innerArray;
-    }
-    );
+          ...competition.qualifiedCountries.map((country) => [
+            country.name,
+            country.totalPoints,
+          ]),
+        ];
+        result[competition.year] = innerArray;
+      });
 
     generateGoogleData();
     setGoogleData(result);
@@ -92,18 +108,18 @@ const App = () => {
     let totalJury = 0;
     let totalTele = 0;
 
-    const generateTotal = () => data.forEach((competition) => {
-      competition.qualifiedCountries.forEach((country) => {
-        totalSum += country.totalPoints
-        totalJury += country.juryPoints
-        totalTele += country.teleVotes
-      })
-      totalYears++;
-      }
-    );
+    const generateTotal = () =>
+      data.forEach((competition) => {
+        competition.qualifiedCountries.forEach((country) => {
+          totalSum += country.totalPoints;
+          totalJury += country.juryPoints;
+          totalTele += country.teleVotes;
+        });
+        totalYears++;
+      });
 
     generateTotal();
-    
+
     setTotal(totalSum);
     setTotalYears(totalYears);
     setTotalJury(totalJury);
@@ -114,61 +130,51 @@ const App = () => {
     let averagePositions = {};
 
     const calculateAverage = () => {
-
-      data.forEach((competition) => 
-
+      data.forEach((competition) =>
         competition.qualifiedCountries.forEach((country, index) => {
-  
           let countryName = country.name;
           let countryPosition = index;
-  
-          if(countryName in countryPositions){
+
+          if (countryName in countryPositions) {
             countryPositions[countryName] += countryPosition;
             countryOccurrences[countryName]++;
-          }else{
+          } else {
             countryPositions[countryName] = countryPosition;
             countryOccurrences[countryName] = 1;
           }
-  
         })
-  
-      )
+      );
 
       for (let countryName in countryPositions) {
-
         let totalPosition = countryPositions[countryName];
         let ocurrenceCount = countryOccurrences[countryName];
-        let average = totalPosition/ocurrenceCount;
+        let average = totalPosition / ocurrenceCount;
         average = parseFloat(average.toFixed(2));
         averagePositions[countryName] = average;
-  
       }
-      console.log(averagePositions)
+      console.log(averagePositions);
       setAveragePos(averagePositions);
-    }
+    };
 
     calculateAverage();
 
-    console.log(averagePos)
-
-
+    console.log(averagePos);
   }, [data.length !== 0]);
-
 
   const options = {
     responsive: true,
     scales: {
       x: {
         beginAtZero: true,
-        type: 'linear',
-        position: 'bottom',
+        type: "linear",
+        position: "bottom",
         min: 0, // Set the minimum value for the x-axis
         max: 450, // Set the maximum value for the x-axis
       },
       y: {
         beginAtZero: true,
-        type: 'linear',
-        position: 'left',
+        type: "linear",
+        position: "left",
         min: 0, // Set the minimum value for the y-axis
         max: 450, // Set the maximum value for the y-axis
       },
@@ -184,17 +190,15 @@ const App = () => {
   };
 
   var optionsG = {
-    region: '150', // Africa
-    colorAxis: { colors: ['#ffb1c2', '#ff6384'] },
-    backgroundColor: '#141e26',
-    datalessRegionColor: '#2c353c',
-    defaultColor: '#f5f5f5',
+    region: "150", // Africa
+    colorAxis: { colors: ["#ffb1c2", "#ff6384"] },
+    backgroundColor: "#141e26",
+    datalessRegionColor: "#2c353c",
+    defaultColor: "#f5f5f5",
   };
-
 
   return (
     <div className="container">
-
       {/* {console.log("data")}
       {console.log(data)}
 
@@ -204,7 +208,6 @@ const App = () => {
       {console.log("google dataSet")}
       {console.log(googleData)} */}
 
-
       {data.length === 0 ? (
         <h1>fetching data...</h1>
       ) : (
@@ -212,17 +215,15 @@ const App = () => {
       )}
 
       <article>
-
-        <h3>A total of {total} points during {totalYears} years</h3>
+        <h3>
+          A total of {total} points during {totalYears} years
+        </h3>
 
         <h4>{totalJury} jury points in total</h4>
         <h4>{totalTele} televote points in total</h4>
-
       </article>
 
-      <article>
-
-      </article>
+      <article></article>
 
       {data.map((competition, index) => (
         <article key={index}>
@@ -231,14 +232,14 @@ const App = () => {
             <ol>
               {competition.qualifiedCountries.map((item, index) => (
                 <li className="li-font-size" key={index}>
-                  {item.name} - {item.totalPoints}pts - {item.juryPoints}pts - {item.teleVotes}pts
+                  {item.name} - {item.totalPoints}pts - {item.juryPoints}pts -{" "}
+                  {item.teleVotes}pts
                 </li>
               ))}
             </ol>
-
           </div>
           {/* {console.log(googleData[competition.year])} */}
-          <div style={{ width: '50%', display: "inline-block" }}>
+          <div style={{ width: "50%", display: "inline-block" }}>
             <Chart
               style={{ display: "inline-block" }}
               chartEvents={[
@@ -248,7 +249,8 @@ const App = () => {
                     const chart = chartWrapper.getChart();
                     const selection = chart.getSelection();
                     if (selection.length === 0) return;
-                    const region = googleData[competition.year][selection[0].row + 1];
+                    const region =
+                      googleData[competition.year][selection[0].row + 1];
                     console.log("Selected : " + region);
                   },
                 },
@@ -260,7 +262,7 @@ const App = () => {
             />
           </div>
 
-          <div style={{ width: '50%', display: "inline-block" }}>
+          <div style={{ width: "50%", display: "inline-block" }}>
             <Scatter
               // options={options}
               data={dataSet}
