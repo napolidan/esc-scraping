@@ -176,16 +176,46 @@ async function scrapeESC(url) {
       for (let i = 0; i < arrayScores.length; i++) {
         const teleVotes = {
           name: "",
-          [parseInt(1)]: 0,
-          [parseInt(2)]: 0,
-          [parseInt(3)]: 0,
-          [parseInt(4)]: 0,
-          [parseInt(5)]: 0,
-          [parseInt(6)]: 0,
-          [parseInt(7)]: 0,
-          [parseInt(8)]: 0,
-          [parseInt(10)]: 0,
-          [parseInt(12)]: 0,
+          [parseInt(1)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(2)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(3)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(4)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(5)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(6)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(7)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(8)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(10)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(12)]: {
+            amount: 0,
+            countries: [],
+          },
         };
 
         for (let j = 4; j < arrayScores[i].children.length; j++) {
@@ -193,8 +223,14 @@ async function scrapeESC(url) {
             arrayScores[i].querySelector(`td:nth-child(${j + 1})`).innerText
           );
           console.log(number);
-          if (number != null && number != NaN) {
-            teleVotes[number] = teleVotes[number] + 1;
+          if (!isNaN(number) && teleVotes.hasOwnProperty(number)) {
+            teleVotes[number].amount = teleVotes[number].amount + 1;
+            const givenCountries = Array.from(
+              document.querySelectorAll(".scoreboard_table>thead tr td")
+            );
+            teleVotes[number].countries.push(
+              givenCountries[j - 2].getAttribute("data-from") || "world"
+            );
           }
         }
         const countryName =
