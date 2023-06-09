@@ -719,70 +719,129 @@ const App = () => {
       return obj;
     });
 
-    sortedArray2 = results.map(function(obj) {
-      obj.qualifiedCountries.sort(function(a, b) {
-        return b.totalPoints - a.totalPoints;
-      });
-      obj.nonQualifiedCountries.sort(function(a, b) {
-        return b.totalPoints - a.totalPoints;
-      });
-      return obj;
-    });
-    setLessJury(sortedArray2);
-  }
+  const [googleData, setGoogleData] = useState({});
 
-  if(lessJury.length !== 0 && overall.length === 0){
-    setResults(data);
-    // Reduce the jsonArray to create a new array with sorted JSON objects for qualified and non-qualified countries
-    let sortedArray3 = results.reduce(function(acc, obj) {
-      var qualifiedCountriesArray = obj.qualifiedCountries.map(function(country) {
-        return {
-          "name": country.name,
-          "controversy": country.teleVotes-country.juryPoints,
-          "totalPoints": country.totalPoints,
-          "juryPoints": country.juryPoints,
-          "teleVotes": country.teleVotes,
-          "year": obj.year
-        };
-      });
-    
-      var nonQualifiedCountriesArray = obj.nonQualifiedCountries.map(function(country) {
-        return {
-          "name": country.name,
-          "controversy": country.teleVotes-country.juryPoints,
-          "totalPoints": country.totalPoints,
-          "juryPoints": country.juryPoints,
-          "teleVotes": country.teleVotes,
-          "year": obj.year
-        };
-      });
-    
-      acc[0].countries = acc[0].countries.concat(qualifiedCountriesArray);
-      acc[1].countries = acc[1].countries.concat(nonQualifiedCountriesArray);
-    
-      return acc;
-    }, [
-      { "category": "Qualified Countries", "countries": [] },
-      { "category": "Non-Qualified Countries", "countries": [] }
-    ]);
-    
-    // Sort the inner JSON objects by points in descending order
-    sortedArray3.forEach(function(category) {
-      category.countries.sort(function(a, b) {
-        return b.totalPoints - a.totalPoints; // Sort in descending order
-      });
-    });
+  // AXIOS OBTENIENDO DATA
+  useEffect(() => {
 
-    setOverall(sortedArray3);
-  }
-  
-  return(
+    escService.getAll().then(results => setData(results))
 
-    <div className='container'>
+  }, [])
+
+  // OBTENER EL DATASET PARA GRÁFICOS
+  useEffect(() => {
+
+    const mapeo = () => data.flatMap((competition) =>
+    (
+      competition.qualifiedCountries.map(({ name, totalPoints, juryPoints, teleVotes }) => (
+        {
+          x: juryPoints,
+          y: teleVotes,
+          country: name,
+          totalPoints: totalPoints
+        }
+      )
+      )
+    )
+    )
+
+    setDataSet(prevdataSet => ({
+      ...prevdataSet,
+      datasets: prevdataSet.datasets.map(ds => ({
+        ...ds,
+        data: mapeo()
+      }))
+    }))
+
+    const result = {}
+
+    const generateGoogleData = () => data.map((competition) => 
+      {
+        const innerArray = 
+        [
+          ["country name", "total points"],
+          ...competition.qualifiedCountries.map((country) => 
+              [country.name, country.totalPoints.toString()]
+          )
+        ]
+        result[competition.year] = innerArray;
+      }
+    );
+    
+    console.log("result")
+    console.log(result)
+
+
+    const mapa = generateGoogleData();
+    console.log("mapa")
+    console.log(mapa)
+
+    setGoogleData(result)
+
+
 
     {console.log(overall)}
 
-      {results.length === 0 ? (
+  const options = {
+    responsive: true,
+    scales: {
+      x: {
+        beginAtZero: true,
+        type: 'linear',
+        position: 'bottom',
+        min: 0, // Set the minimum value for the x-axis
+        max: 450, // Set the maximum value for the x-axis
+      },
+      y: {
+        beginAtZero: true,
+        type: 'linear',
+        position: 'left',
+        min: 0, // Set the minimum value for the y-axis
+        max: 450, // Set the maximum value for the y-axis
+      },
+    },
+    tooltips: {
+      callbacks: {
+        label: (tooltipItem) => {
+          const point = dataSet.data[tooltipItem.index];
+          return point.label;
+        },
+      },
+    },
+  };
+
+  const optionsG = {
+    // Material design options
+    chart: {
+      title: "Countries' Jury points and Televotes",
+    },
+    series: {
+      0: { axis: "jury points" },
+      1: { axis: "televotes" },
+    },
+    axes: {
+      y: {
+        "jury points": { label: "Jury Points" },
+        "televotes": { label: "Televotes" },
+      },
+    },
+  };
+
+
+  return (
+    <div className="container">
+
+      {console.log("data")}
+      {console.log(data)}
+
+      {console.log("dataSet")}
+      {console.log(dataSet)}
+
+      {console.log("google dataSet")}
+      {console.log(googleData)}
+
+
+      {data.length === 0 ? (
         <h1>fetching data...</h1>
       ) : (
         <h1>eurovision results</h1>
@@ -826,31 +885,23 @@ const App = () => {
                 </li>
               ))}
             </ol>
-            <div>
-            <div style={{width: '100%', minWidth: '350px', maxWidth: '650px' }}>
-              <ResponsiveContainer width={"100%"} aspect={1}>
-                <BarChart
-                  width={1000}
-                  height={1000}
-                  data={competition.qualifiedCountries}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="teleVotes" stackId="a" fill="#82ca9d" />
-                  <Bar dataKey="juryPoints" stackId="a" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            </div>
+
+          </div>
+          {console.log("asdfs")}
+          {console.log(googleData[competition.year])}
+          <Chart
+              chartType="GeoChart"
+              width="100%"
+              height="800px"
+              data={googleData[competition.year]}
+              // options={optionsG}
+            />
+          <div>
+            <Scatter
+            // options={options}
+            data={dataSet}
+            />
+
           </div>
         </article>
 

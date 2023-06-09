@@ -242,8 +242,24 @@ async function scrapeESC(url) {
       return points;
     });
 
-    console.log(scores);
     results.teleVotesRecieved = scores;
+    for (const country of results.qualifiedCountries) {
+      country.teleVotesReceived = [];
+      for (const key in results.teleVotesRecieved) {
+        const votes = results.teleVotesRecieved[key];
+        if (votes.name === country.name) {
+          for (const amount in votes) {
+            if (amount !== "name" && votes[amount].amount !== 0) {
+              country.teleVotesReceived.push({
+                amount: parseInt(amount),
+                countries: votes[amount].countries,
+              });
+            }
+          }
+          break;
+        }
+      }
+    }
 
     totalCountries.push(results);
 
@@ -258,7 +274,6 @@ async function scrapeESC(url) {
   // await page.screenshot({path: `screenshot${year}.png`});
 
   const totalCountriesJSON = JSON.stringify(totalCountries);
-
   results = totalCountriesJSON;
   // console.log(totalCountriesJSON);
   await browser.close();
