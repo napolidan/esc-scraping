@@ -101,6 +101,7 @@ const App = () => {
         result[competition.year] = innerArray;
       });
 
+
     generateGoogleData();
     setGoogleData(result);
     let totalSum = 0;
@@ -128,6 +129,7 @@ const App = () => {
     let countryPositions = {};
     let countryOccurrences = {};
     let averagePositions = {};
+
 
     const calculateAverage = () => {
       data.forEach((competition) =>
