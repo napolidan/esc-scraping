@@ -1,7 +1,8 @@
 import React, { useState, useEffect, PureComponent } from "react";
-import {getAll} from "./services/results";
+import { getAll } from "./services/results";
 // import 'bootstrap/dist/css/bootstrap.min.css';
 // import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import "./pico-custom.scss";
 import "@picocss/pico";
 import Chart from "react-google-charts";
 import {
@@ -38,16 +39,15 @@ const App = () => {
 
   const [googleData, setGoogleData] = useState({});
 
-
   useEffect(() => {
     async function fetchDataWrapper() {
       try {
         const data = await getAll();
         // Use the data
-        setData(data)
+        setData(data);
       } catch (error) {
         // Handle the error
-        console.log('Error:', error);
+        console.log("Error:", error);
       }
     }
 
@@ -197,8 +197,27 @@ const App = () => {
     defaultColor: "#f5f5f5",
   };
 
+  function Accordion({ title, content }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleAccordionClick = () => {
+      setIsOpen(!isOpen);
+    };
+
+    return (
+      <details className={`accordion ${isOpen ? "open" : ""}`}>
+        <summary onClick={handleAccordionClick}>{title}</summary>
+        {isOpen && (
+          <div className="accordion-content">
+            <p>{content}</p>
+          </div>
+        )}
+      </details>
+    );
+  }
+
   return (
-    <div className="container">
+    <main>
       {/* {console.log("data")}
       {console.log(data)}
 
@@ -209,68 +228,109 @@ const App = () => {
       {console.log(googleData)} */}
 
       {data.length === 0 ? (
-        <h1>fetching data...</h1>
-      ) : (
-        <h1>eurovision results</h1>
-      )}
-
-      <article>
-        <h3>
-          A total of {total} points during {totalYears} years
-        </h3>
-
-        <h4>{totalJury} jury points in total</h4>
-        <h4>{totalTele} televote points in total</h4>
-      </article>
-
-      <article></article>
-
-      {data.map((competition, index) => (
-        <article key={index}>
-          <h2>{competition.year}</h2>
+        <div>
           <div className="grid">
-            <ol>
-              {competition.qualifiedCountries.map((item, index) => (
-                <li className="li-font-size" key={index}>
-                  {item.name} - {item.totalPoints}pts - {item.juryPoints}pts -{" "}
-                  {item.teleVotes}pts
-                </li>
-              ))}
-            </ol>
+            <div></div>
+            <article>
+              <header>
+                <hgroup>
+                  <b>Server still off...</b>
+                </hgroup>
+              </header>
+                <progress></progress>
+           </article>
+            <div></div>
           </div>
-          {/* {console.log(googleData[competition.year])} */}
-          <div style={{ width: "50%", display: "inline-block" }}>
-            <Chart
-              style={{ display: "inline-block" }}
-              chartEvents={[
-                {
-                  eventName: "select",
-                  callback: ({ chartWrapper }) => {
-                    const chart = chartWrapper.getChart();
-                    const selection = chart.getSelection();
-                    if (selection.length === 0) return;
-                    const region =
-                      googleData[competition.year][selection[0].row + 1];
-                    console.log("Selected : " + region);
-                  },
-                },
-              ]}
-              chartType="GeoChart"
-              width="100%"
-              data={googleData[competition.year]}
-              options={optionsG}
-            />
-          </div>
+        </div>
+      ) : (
+        <div className="app-container">
+          <nav>
+            <ul>
+              <li>
+                <img src={require("./eurovision_logo.png")} />
+              </li>
+            </ul>
+            <ul>
+              <li>
+                <a href="#">Link</a>
+              </li>
+              <li>
+                <a href="#">Link</a>
+              </li>
+              <li>
+                <a href="#" role="button">
+                  Button
+                </a>
+              </li>
+            </ul>
+          </nav>
 
-          <div style={{ width: "50%", display: "inline-block" }}>
-            <Scatter
-              // options={options}
-              data={dataSet}
-            />
-          </div>
-        </article>
-      ))}
-    </div>
+          <main className="content" data-pico="content">
+            <article>
+              <header>
+                <hgroup>
+                  <h1>Overall results</h1>
+                  <small>Per year</small>
+                </hgroup>
+              </header>
+                {data.map((competition, index) => (
+                  <details key={index}>
+                    <summary>{competition.year}</summary>
+
+                    <body>
+                      <ol>
+                        {competition.qualifiedCountries.map((item, index) => (
+                          <li className="li-font-size" key={index}>
+                            {item.name} - {item.totalPoints}pts -{" "}
+                            {item.juryPoints}
+                            pts - {item.teleVotes}pts
+                          </li>
+                        ))}
+                      </ol>
+                    </body>
+                    {/* {console.log(googleData[competition.year])} */}
+                    <footer>
+                      <div>
+                        <div style={{ width: "50%", display: "inline-block" }}>
+                          <Chart
+                            style={{ display: "inline-block" }}
+                            chartEvents={[
+                              {
+                                eventName: "select",
+                                callback: ({ chartWrapper }) => {
+                                  const chart = chartWrapper.getChart();
+                                  const selection = chart.getSelection();
+                                  if (selection.length === 0) return;
+                                  const region =
+                                    googleData[competition.year][
+                                      selection[0].row + 1
+                                    ];
+                                  console.log("Selected : " + region);
+                                },
+                              },
+                            ]}
+                            chartType="GeoChart"
+                            width="100%"
+                            data={googleData[competition.year]}
+                            options={optionsG}
+                          />
+                        </div>
+
+                        <div style={{ width: "50%", display: "inline-block" }}>
+                          <Scatter
+                            // options={options}
+                            data={dataSet}
+                          />
+                        </div>
+                      </div>
+                    </footer>
+                  </details>
+                ))}
+            </article>
+          </main>
+        </div>
+      )}
+    </main>
   );
 };
 
