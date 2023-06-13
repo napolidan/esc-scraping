@@ -101,7 +101,6 @@ const App = () => {
         result[competition.year] = innerArray;
       });
 
-
     generateGoogleData();
     setGoogleData(result);
     let totalSum = 0;
@@ -125,11 +124,10 @@ const App = () => {
     setTotalYears(totalYears);
     setTotalJury(totalJury);
     setTotalTele(totalTele);
-
+    
     let countryPositions = {};
     let countryOccurrences = {};
     let averagePositions = {};
-
 
     const calculateAverage = () => {
       data.forEach((competition) =>
@@ -154,13 +152,11 @@ const App = () => {
         average = parseFloat(average.toFixed(2));
         averagePositions[countryName] = average;
       }
-      console.log(averagePositions);
-      setAveragePos(averagePositions);
+      // console.log(averagePositions);
+      return averagePositions;
     };
 
-    calculateAverage();
-
-    console.log(averagePos);
+    setAveragePos(calculateAverage);
   }, [data.length !== 0]);
 
   const options = {
@@ -239,8 +235,8 @@ const App = () => {
                   <b>Server still off...</b>
                 </hgroup>
               </header>
-                <progress></progress>
-           </article>
+              <progress></progress>
+            </article>
             <div></div>
           </div>
         </div>
@@ -275,59 +271,59 @@ const App = () => {
                   <small>Per year</small>
                 </hgroup>
               </header>
-                {data.map((competition, index) => (
-                  <details key={index}>
-                    <summary>{competition.year}</summary>
+              {data.map((competition, index) => (
+                <details key={index}>
+                  <summary>{competition.year}</summary>
 
-                    <body>
-                      <ol>
-                        {competition.qualifiedCountries.map((item, index) => (
-                          <li className="li-font-size" key={index}>
-                            {item.name} - {item.totalPoints}pts -{" "}
-                            {item.juryPoints}
-                            pts - {item.teleVotes}pts
-                          </li>
-                        ))}
-                      </ol>
-                    </body>
-                    {/* {console.log(googleData[competition.year])} */}
-                    <footer>
-                      <div>
-                        <div style={{ width: "50%", display: "inline-block" }}>
-                          <Chart
-                            style={{ display: "inline-block" }}
-                            chartEvents={[
-                              {
-                                eventName: "select",
-                                callback: ({ chartWrapper }) => {
-                                  const chart = chartWrapper.getChart();
-                                  const selection = chart.getSelection();
-                                  if (selection.length === 0) return;
-                                  const region =
-                                    googleData[competition.year][
-                                      selection[0].row + 1
-                                    ];
-                                  console.log("Selected : " + region);
-                                },
+                  <body>
+                    <ol>
+                      {competition.qualifiedCountries.map((item, index) => (
+                        <li className="li-font-size" key={index}>
+                          {item.name} - {item.totalPoints}pts -{" "}
+                          {item.juryPoints}
+                          pts - {item.teleVotes}pts
+                        </li>
+                      ))}
+                    </ol>
+                  </body>
+                  {/* {console.log(googleData[competition.year])} */}
+                  <footer>
+                    <div>
+                      <div style={{ width: "50%", display: "inline-block" }}>
+                        <Chart
+                          style={{ display: "inline-block" }}
+                          chartEvents={[
+                            {
+                              eventName: "select",
+                              callback: ({ chartWrapper }) => {
+                                const chart = chartWrapper.getChart();
+                                const selection = chart.getSelection();
+                                if (selection.length === 0) return;
+                                const region =
+                                  googleData[competition.year][
+                                    selection[0].row + 1
+                                  ];
+                                console.log("Selected : " + region);
                               },
-                            ]}
-                            chartType="GeoChart"
-                            width="100%"
-                            data={googleData[competition.year]}
-                            options={optionsG}
-                          />
-                        </div>
-
-                        <div style={{ width: "50%", display: "inline-block" }}>
-                          <Scatter
-                            // options={options}
-                            data={dataSet}
-                          />
-                        </div>
+                            },
+                          ]}
+                          chartType="GeoChart"
+                          width="100%"
+                          data={googleData[competition.year]}
+                          options={optionsG}
+                        />
                       </div>
-                    </footer>
-                  </details>
-                ))}
+
+                      <div style={{ width: "50%", display: "inline-block" }}>
+                        <Scatter
+                          // options={options}
+                          data={dataSet}
+                        />
+                      </div>
+                    </div>
+                  </footer>
+                </details>
+              ))}
             </article>
           </main>
         </div>
