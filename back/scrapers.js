@@ -229,7 +229,7 @@ async function scrapeESC(url) {
               document.querySelectorAll(".scoreboard_table>thead tr td")
             );
             teleVotes[number].countries.push(
-              givenCountries[j - 2].getAttribute("data-from") || "world"
+              givenCountries[j - 3].getAttribute("data-from")
             );
           }
         }
