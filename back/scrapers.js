@@ -120,8 +120,8 @@ async function scrapeESC(url) {
           name: name,
           flag: flag,
           totalPoints: pointsTotal,
-          juryPoints: juryPoints,
-          teleVotes: teleVotes,
+          juryPointsTotal: juryPoints,
+          teleVotesTotal: teleVotes,
         };
       });
 
@@ -253,6 +253,108 @@ async function scrapeESC(url) {
               country.teleVotesReceived.push({
                 amount: parseInt(amount),
                 countries: votes[amount].countries,
+              });
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    await page.evaluate(async () => {
+      const buttonSelector = '[data-button="jury"]';
+      const buttonElement = document.querySelector(buttonSelector);
+      console.log(buttonElement.innerText);
+
+      await buttonElement.click();
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const juryScores = await page.evaluate(() => {
+      const scores = document.querySelectorAll(".scoreboard_table>tbody tr");
+      const arrayScores = Array.from(scores);
+      let points = [];
+
+      for (let i = 0; i < arrayScores.length; i++) {
+        const juryPoints = {
+          name: "",
+          [parseInt(1)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(2)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(3)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(4)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(5)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(6)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(7)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(8)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(10)]: {
+            amount: 0,
+            countries: [],
+          },
+          [parseInt(12)]: {
+            amount: 0,
+            countries: [],
+          },
+        };
+
+        for (let j = 4; j < arrayScores[i].children.length; j++) {
+          const number = parseInt(
+            arrayScores[i].querySelector(`td:nth-child(${j + 1})`).innerText
+          );
+          if (!isNaN(number) && juryPoints.hasOwnProperty(number)) {
+            juryPoints[number].amount = juryPoints[number].amount + 1;
+            const givenCountries = Array.from(
+              document.querySelectorAll(".scoreboard_table>thead tr td")
+            );
+            juryPoints[number].countries.push(
+              givenCountries[j - 3].getAttribute("data-from")
+            );
+          }
+        }
+        const countryName =
+          arrayScores[i].querySelector(`td:nth-child(3)`).innerText;
+        juryPoints.name = countryName;
+        delete juryPoints.NaN;
+        points.push(juryPoints);
+      }
+      return points;
+    });
+
+    results.juryPointsRecieved = juryScores;
+    for (const country of results.qualifiedCountries) {
+      country.juryPointsRecieved = [];
+      for (const key in results.juryPointsRecieved) {
+        const points = results.juryPointsRecieved[key];
+        if (points.name === country.name) {
+          for (const amount in points) {
+            if (amount !== "name" && points[amount].amount !== 0) {
+              country.juryPointsRecieved.push({
+                amount: parseInt(amount),
+                countries: points[amount].countries,
               });
             }
           }
