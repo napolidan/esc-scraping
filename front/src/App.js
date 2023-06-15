@@ -124,7 +124,7 @@ const App = () => {
     setTotalYears(totalYears);
     setTotalJury(totalJury);
     setTotalTele(totalTele);
-    
+
     let countryPositions = {};
     let countryOccurrences = {};
     let averagePositions = {};
@@ -158,6 +158,7 @@ const App = () => {
 
     setAveragePos(calculateAverage);
   }, [data.length !== 0]);
+  console.log(averagePos);
 
   const options = {
     responsive: true,
@@ -263,6 +264,23 @@ const App = () => {
             </ul>
           </nav>
 
+          <main>
+            <article>
+              <header>
+                <h1>Average position</h1>
+                <small>Per country</small>
+              </header>
+
+              <ul>
+                {Object.entries(averagePos).map(([key, value]) => (
+                  <li key={key}>
+                    <strong>{key}:</strong> {value} place
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </main>
+
           <main className="content" data-pico="content">
             <article>
               <header>
@@ -275,17 +293,14 @@ const App = () => {
                 <details key={index}>
                   <summary>{competition.year}</summary>
 
-                  <body>
-                    <ol>
-                      {competition.qualifiedCountries.map((item, index) => (
-                        <li className="li-font-size" key={index}>
-                          {item.name} - {item.totalPoints}pts -{" "}
-                          {item.juryPoints}
-                          pts - {item.teleVotes}pts
-                        </li>
-                      ))}
-                    </ol>
-                  </body>
+                  <ol>
+                    {competition.qualifiedCountries.map((item, index) => (
+                      <li className="li-font-size" key={index}>
+                        {item.name} - {item.totalPoints}pts - {item.juryPoints}
+                        pts - {item.teleVotes}pts
+                      </li>
+                    ))}
+                  </ol>
                   {/* {console.log(googleData[competition.year])} */}
                   <footer>
                     <div>
