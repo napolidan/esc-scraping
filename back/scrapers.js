@@ -24,11 +24,13 @@ for (let file = 1956; file < 2025; file++) {
 
   filePath = "screenshot";
 }
-
+//copy front to back
 app.use(express.static("build"));
 
+//final result array that will be sent to the api
 let results = [];
 
+//endpoint for a specific country of a specific year
 app.get("/api/escResults/:year/:country", (request, response) => {
   const resultsArray = JSON.parse(results);
   const year = resultsArray.filter(
@@ -51,6 +53,7 @@ app.get("/api/escResults/:year/:country", (request, response) => {
   response.send(country);
 });
 
+//endpoint of a specific year
 app.get("/api/escResults/:year", (request, response) => {
   const resultsArray = JSON.parse(results);
   const year = resultsArray.filter(
@@ -59,10 +62,12 @@ app.get("/api/escResults/:year", (request, response) => {
   response.send(year);
 });
 
+//all results
 app.use("/api/escResults", async (req, res) => {
   res.send(results);
 });
 
+//the result object
 function Results(year, qualifiedCountries, nonQualifiedCountries) {
   this.year = year;
   this.qualifiedCountries = qualifiedCountries;
@@ -77,9 +82,11 @@ async function scrapeESC(url) {
   });
 
   let year = 2023;
+  //array where the information of the results is stored
   let totalCountries = [];
   let counter = 0;
 
+  //year can be modified based on needs, loop the info year by year
   while (year >= 2021) {
     const page = await browser.newPage();
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -92,11 +99,13 @@ async function scrapeESC(url) {
 
     // await page.screenshot({path: `screenshot${year}.png`});
 
+    //scrap first countries qualified to final
     const qualifiedCountries = await page.evaluate(async () => {
       const countriesFinal = document.querySelectorAll(
         ".v_table_main>tbody tr"
       );
 
+      //map each country found - name, points, flag
       const promises = Array.from(countriesFinal).map(async (country) => {
         const name = country.querySelector("td:nth-child(2) a").innerText;
         const pointsTotal = parseInt(
@@ -116,6 +125,8 @@ async function scrapeESC(url) {
         );
         const information = await countryRequest.json();
         const flag = information[0].flags.svg;
+
+        //return a json object of the mapping
         return {
           name: name,
           flag: flag,
@@ -128,6 +139,7 @@ async function scrapeESC(url) {
       return Promise.all(promises);
     });
 
+    //do the same thing for nonqualified countries as done for qualified countries
     const nonQualifiedCountries = await page.evaluate(() => {
       const droppedCountries = document.querySelectorAll(
         ".v_table_out>tbody tr"
@@ -141,7 +153,7 @@ async function scrapeESC(url) {
         );
         const information = await countryRequest.json();
         const flag = information[0].flags.svg;
-
+        //return json of mapping (doesnt include seperately televotes and jurypoints)
         return {
           name: name,
           flag: flag,
@@ -151,29 +163,32 @@ async function scrapeESC(url) {
       return Promise.all(promises2);
     });
 
+    //create a result json that include the current year of the loop and arrays of the qualified/noncualified countries
     const results = new Results(
       year,
       qualifiedCountries,
       nonQualifiedCountries
     );
 
+    //find specific data of the televotes received
     await page.evaluate(async () => {
-      console.log("hola");
       const buttonSelector = '[data-button="tele"]';
       const buttonElement = document.querySelector(buttonSelector);
-      console.log(buttonElement.innerText);
 
+      //click the televotes button to see the specific data of televotes
       await buttonElement.click();
     });
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
+    //find specific televotes
     const scores = await page.evaluate(() => {
       const scores = document.querySelectorAll(".scoreboard_table>tbody tr");
       const arrayScores = Array.from(scores);
       let points = [];
 
       for (let i = 0; i < arrayScores.length; i++) {
+        //create a json that includes every point
         const teleVotes = {
           name: "",
           [parseInt(1)]: {
@@ -217,22 +232,25 @@ async function scrapeESC(url) {
             countries: [],
           },
         };
-
+        // find every point with scrapping
         for (let j = 4; j < arrayScores[i].children.length; j++) {
           const number = parseInt(
             arrayScores[i].querySelector(`td:nth-child(${j + 1})`).innerText
           );
-          console.log(number);
+          //increase the amount of the found number in the televotes json
           if (!isNaN(number) && teleVotes.hasOwnProperty(number)) {
             teleVotes[number].amount = teleVotes[number].amount + 1;
+            //find the countries that have given the point
             const givenCountries = Array.from(
               document.querySelectorAll(".scoreboard_table>thead tr td")
             );
+            //add the abbrevation of the country to the country array of the object
             teleVotes[number].countries.push(
               givenCountries[j - 3].getAttribute("data-from")
             );
           }
         }
+        //add the country who received the points
         const countryName =
           arrayScores[i].querySelector(`td:nth-child(3)`).innerText;
         teleVotes.name = countryName;
@@ -242,6 +260,7 @@ async function scrapeESC(url) {
       return points;
     });
 
+    //modify the final json so, that each country will have the televotesReceived as their property in the json
     results.teleVotesRecieved = scores;
     for (const country of results.qualifiedCountries) {
       country.teleVotesReceived = [];
@@ -261,6 +280,7 @@ async function scrapeESC(url) {
       }
     }
 
+    //do the same thing to jury votes that was did to televotes
     await page.evaluate(async () => {
       const buttonSelector = '[data-button="jury"]';
       const buttonElement = document.querySelector(buttonSelector);
@@ -373,13 +393,10 @@ async function scrapeESC(url) {
     year--;
   }
 
-  // await page.screenshot({path: `screenshot${year}.png`});
-
   const totalCountriesJSON = JSON.stringify(totalCountries);
+  //update results object that will be send to the api
   results = totalCountriesJSON;
-  // console.log(totalCountriesJSON);
   await browser.close();
-
   return totalCountriesJSON;
 }
 
