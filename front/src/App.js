@@ -152,6 +152,8 @@ const App = () => {
         average = parseFloat(average.toFixed(2));
         averagePositions[countryName] = average;
       }
+      averagePositions = Object.fromEntries(Object.entries(averagePositions).sort((a, b) => a[1] - b[1]));
+
       // console.log(averagePositions);
       return averagePositions;
     };
