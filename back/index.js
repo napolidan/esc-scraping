@@ -5,8 +5,7 @@ require("dotenv").config();
 const cors = require("cors");
 const fs = require("fs");
 const { eraseScreenshots } = require("./modules/fileUtils");
-const { abbreviationsRouter, resultsRouter } = require("./modules/apiRoutes");
-const { scrapeESC } = require("./modules/scraping");
+const { abbreviationsRouter, resultsRouter } = require("./modules/scraping");
 
 app.use(cors());
 app.use(express.static("build"));
@@ -17,9 +16,6 @@ eraseScreenshots();
 // API Routes
 app.use("/api/escResults/abbreviations", abbreviationsRouter);
 app.use("/api/escResults", resultsRouter);
-
-// Scraping
-scrapeESC("https://eurovisionworld.com/eurovision");
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => {

@@ -188,18 +188,9 @@ function Results(year, qualifiedCountries, nonQualifiedCountries) {
 }
 
 let time = 3;
-let resultsFinal = [];
-
-function updateResultsFinal(newResults) {
-  resultsFinal = newResults;
-  console.log("hola");
-  console.log(resultsFinal);
-}
 
 module.exports = {
   abbreviations,
   Results,
-  resultsFinal,
   time,
-  updateResultsFinal,
 };
