@@ -1,9 +1,15 @@
 const puppeteer = require("puppeteer");
 const fetch = require("node-fetch");
 let { Results, time } = require("./resultsData");
-const { updateResultsFinal } = require("./resultsData");
 
-async function scrapeESC(url) {
+let resultsFinal = [];
+
+function updateResultsFinal(newResults) {
+  resultsFinal = newResults;
+  console.log(resultsFinal);
+}
+
+async function scrapeESC(url, callback) {
   const browser = await puppeteer.launch({
     headless: "new",
   });
@@ -321,11 +327,14 @@ async function scrapeESC(url) {
   }
 
   const totalCountriesJSON = JSON.stringify(totalCountries);
-
   //update resultsFinal array that will be send to the api
   updateResultsFinal(totalCountriesJSON);
+  callback();
+
+  //   callback(totalCountriesJSON);
+
   await browser.close();
   return totalCountriesJSON;
 }
 
-module.exports = { scrapeESC };
+module.exports = { scrapeESC, resultsFinal };

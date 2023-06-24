@@ -1,7 +1,13 @@
 const express = require("express");
 const abbreviationsRouter = express.Router();
 const resultsRouter = express.Router();
-let { resultsFinal, abbreviations } = require("./resultsData");
+let { abbreviations } = require("./resultsData");
+const { resultsFinal } = require("./scraping");
+const { scrapeESC } = require("./scraping");
+
+const scrapingCallback = () => {
+  console.log("Scraping is complete. Updated results:", resultsFinal);
+};
 
 abbreviationsRouter.get("/", async (req, res) => {
   res.send(abbreviations);
@@ -45,4 +51,10 @@ resultsRouter.get("/", async (req, res) => {
   res.send(resultsFinal);
 });
 
-module.exports = { abbreviationsRouter, resultsRouter };
+module.exports = {
+  abbreviationsRouter,
+  resultsRouter,
+};
+
+// Scraping
+scrapeESC("https://eurovisionworld.com/eurovision", scrapingCallback);
